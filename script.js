@@ -8,6 +8,8 @@ container.appendChild(textContainer);
 
 const fontLoader = new THREE.FontLoader();
 
+let isPaused = false; // initialize animation as not paused
+
 fontLoader.load('./fonts/helvetiker_regular.typeface.json', function(font) {
   const textGeometry = new THREE.TextGeometry('Avery', {
     font: font,
@@ -56,28 +58,42 @@ fontLoader.load('./fonts/helvetiker_regular.typeface.json', function(font) {
   scene.add(reflectiveCube);
   
   function animate() {
-    requestAnimationFrame(animate);
-    textMesh.rotation.x += 0;
-    textGeometry.center();
-    textMesh.rotation.y += 0.01;
-    cubeCamera.update(renderer, scene);
-    renderer.render(scene, camera);
+    if (!isPaused) { // check if animation is paused
+      requestAnimationFrame(animate);
+      textMesh.rotation.x += 0;
+      textGeometry.center();
+      textMesh.rotation.y += 0.01;
+      cubeCamera.update(renderer, scene);
+      renderer.render(scene, camera);
+    }
   }
 
   animate();
 });
 
 function getRandomPosition() {
-    const x = Math.floor(Math.random() * (container.clientWidth - images[0].clientWidth));
-    const y = Math.floor(Math.random() * (container.clientHeight - images[0].clientHeight));
-    return [x, y];
-  }
-  
-  function moveImage(image) {
+  const x = Math.floor(Math.random() * (container.clientWidth - images[0].clientWidth));
+  const y = Math.floor(Math.random() * (container.clientHeight - images[0].clientHeight));
+  return [x, y];
+}
+
+function moveImage(image) {
     const [x, y] = getRandomPosition();
     image.style.transition = 'transform 3s ease-in-out';
     image.style.transform = `translate(${x}px, ${y}px)`;
   }
+  
+  function handlePausePlay() {
+    isPaused = !isPaused;
+  }
+  
+  function handleKeyPress(event) {
+    if (event.code === 'KeyQ') {
+      handlePausePlay();
+    }
+  }
+  
+  document.addEventListener('keydown', handleKeyPress);
   
   images.forEach((image) => {
     image.addEventListener('mouseenter', () => {
@@ -89,41 +105,25 @@ function getRandomPosition() {
       image.style.zIndex = '1';
       reflectiveCube.material.opacity = 0.8;
     });
+  
+    setInterval(() => {
+      if (!isPaused) {
+        moveImage(image);
+      }
+    }, 3000);
   });
   
-  setInterval(() => {
-    images.forEach((image) => {
-      moveImage(image);
-    });
-  }, 3000);
-  
-let animationPaused = false;
-let animateId = null;
-
-function animate() {
-  if (!animationPaused) {
-    animateId = requestAnimationFrame(animate);
-    textMesh.rotation.x += 0.01;
+  function animate() {
+    if (!isPaused) {
+      requestAnimationFrame(animate);
+    }
+    
+    textMesh.rotation.x += 0;
+    textGeometry.center();
     textMesh.rotation.y += 0.01;
     cubeCamera.update(renderer, scene);
     renderer.render(scene, camera);
   }
-}
-
-document.addEventListener('keydown', (event) => {
-  if (event.code === 'q') {
-    animationPaused = true;
-    cancelAnimationFrame(animateId);
-  }
-});
-
-document.addEventListener('keyup', (event) => {
-  if (event.code === 'q') {
-    animationPaused = false;
-    animate();
-  }
-});
-
-animate();
-
+  
+  animate();
   
